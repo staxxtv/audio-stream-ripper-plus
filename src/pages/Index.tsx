@@ -1,11 +1,9 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Download, Play, Clock, CheckCircle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-
 const Index = () => {
   const [url, setUrl] = useState('');
   const [isConverting, setIsConverting] = useState(false);
@@ -14,12 +12,10 @@ const Index = () => {
     duration: string;
     thumbnail: string;
   } | null>(null);
-
   const isValidYouTubeUrl = (url: string) => {
     const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+/;
     return youtubeRegex.test(url);
   };
-
   const handleConvert = async () => {
     if (!url.trim()) {
       toast({
@@ -28,7 +24,6 @@ const Index = () => {
       });
       return;
     }
-
     if (!isValidYouTubeUrl(url)) {
       toast({
         title: "Please enter a valid YouTube URL",
@@ -36,9 +31,8 @@ const Index = () => {
       });
       return;
     }
-
     setIsConverting(true);
-    
+
     // Simulate conversion process
     setTimeout(() => {
       setConvertedFile({
@@ -53,16 +47,13 @@ const Index = () => {
       });
     }, 3000);
   };
-
   const handleDownload = () => {
     toast({
       title: "Download started!",
       description: "Your MP3 file is being downloaded."
     });
   };
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+  return <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
@@ -71,9 +62,7 @@ const Index = () => {
               <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
                 <Play className="w-4 h-4 text-white" />
               </div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                YTmp3
-              </h1>
+              <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Insta-Tube</h1>
             </div>
           </div>
         </div>
@@ -98,37 +87,21 @@ const Index = () => {
               <div className="space-y-6">
                 <div className="flex flex-col md:flex-row gap-4">
                   <div className="flex-1">
-                    <Input
-                      type="url"
-                      placeholder="Paste YouTube URL here..."
-                      value={url}
-                      onChange={(e) => setUrl(e.target.value)}
-                      className="h-14 text-lg border-2 border-gray-200 focus:border-blue-500 rounded-xl"
-                      disabled={isConverting}
-                    />
+                    <Input type="url" placeholder="Paste YouTube URL here..." value={url} onChange={e => setUrl(e.target.value)} className="h-14 text-lg border-2 border-gray-200 focus:border-blue-500 rounded-xl" disabled={isConverting} />
                   </div>
-                  <Button
-                    onClick={handleConvert}
-                    disabled={isConverting}
-                    className="h-14 px-8 text-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg"
-                  >
-                    {isConverting ? (
-                      <>
+                  <Button onClick={handleConvert} disabled={isConverting} className="h-14 px-8 text-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg">
+                    {isConverting ? <>
                         <Clock className="w-5 h-5 mr-2 animate-spin" />
                         Converting...
-                      </>
-                    ) : (
-                      <>
+                      </> : <>
                         <Download className="w-5 h-5 mr-2" />
                         Convert
-                      </>
-                    )}
+                      </>}
                   </Button>
                 </div>
 
                 {/* Conversion Result */}
-                {convertedFile && (
-                  <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-xl p-6 border border-green-200">
+                {convertedFile && <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-xl p-6 border border-green-200">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-4">
                         <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center">
@@ -144,16 +117,12 @@ const Index = () => {
                           </p>
                         </div>
                       </div>
-                      <Button
-                        onClick={handleDownload}
-                        className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105"
-                      >
+                      <Button onClick={handleDownload} className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105">
                         <Download className="w-4 h-4 mr-2" />
                         Download MP3
                       </Button>
                     </div>
-                  </div>
-                )}
+                  </div>}
               </div>
             </CardContent>
           </Card>
@@ -239,7 +208,7 @@ const Index = () => {
               <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
                 <Play className="w-4 h-4 text-white" />
               </div>
-              <h3 className="text-xl font-bold">YTmp3</h3>
+              <h3 className="text-xl font-bold">Insta-Tube</h3>
             </div>
             <p className="text-gray-400 mb-4">
               The fastest and easiest way to convert YouTube videos to MP3
@@ -250,8 +219,6 @@ const Index = () => {
           </div>
         </div>
       </footer>
-    </div>
-  );
+    </div>;
 };
-
 export default Index;
