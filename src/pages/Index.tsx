@@ -1,21 +1,33 @@
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { Download, Play, Clock, CheckCircle } from 'lucide-react';
+import { Download, Play, Clock, CheckCircle, Key } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+
 const Index = () => {
   const [url, setUrl] = useState('');
+  const [apiKey, setApiKey] = useState('');
   const [isConverting, setIsConverting] = useState(false);
   const [convertedFile, setConvertedFile] = useState<{
     title: string;
     duration: string;
-    thumbnail: string;
+    link: string;
+    status: string;
   } | null>(null);
+
+  const extractVideoId = (url: string) => {
+    const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+    const match = url.match(regex);
+    return match ? match[1] : null;
+  };
+
   const isValidYouTubeUrl = (url: string) => {
     const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+/;
     return youtubeRegex.test(url);
   };
+
   const handleConvert = async () => {
     if (!url.trim()) {
       toast({
@@ -24,6 +36,15 @@ const Index = () => {
       });
       return;
     }
+
+    if (!apiKey.trim()) {
+      toast({
+        title: "Please enter your RapidAPI key",
+        variant: "destructive"
+      });
+      return;
+    }
+
     if (!isValidYouTubeUrl(url)) {
       toast({
         title: "Please enter a valid YouTube URL",
@@ -31,29 +52,72 @@ const Index = () => {
       });
       return;
     }
-    setIsConverting(true);
 
-    // Simulate conversion process
-    setTimeout(() => {
-      setConvertedFile({
-        title: "Sample Video Title - Artist Name",
-        duration: "3:45",
-        thumbnail: "/placeholder.svg"
-      });
-      setIsConverting(false);
+    const videoId = extractVideoId(url);
+    if (!videoId) {
       toast({
-        title: "Conversion completed!",
-        description: "Your MP3 is ready for download."
+        title: "Could not extract video ID from URL",
+        variant: "destructive"
       });
-    }, 3000);
+      return;
+    }
+
+    setIsConverting(true);
+    setConvertedFile(null);
+
+    try {
+      const response = await fetch(`https://youtube-mp36.p.rapidapi.com/dl?id=${videoId}`, {
+        method: 'GET',
+        headers: {
+          'X-RapidAPI-Key': apiKey,
+          'X-RapidAPI-Host': 'youtube-mp36.p.rapidapi.com'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to convert video');
+      }
+
+      const data = await response.json();
+      
+      if (data.status === 'ok' && data.link) {
+        setConvertedFile({
+          title: data.title || 'YouTube Video',
+          duration: data.duration || 'Unknown',
+          link: data.link,
+          status: data.status
+        });
+        toast({
+          title: "Conversion completed!",
+          description: "Your MP3 is ready for download."
+        });
+      } else {
+        throw new Error('Conversion failed');
+      }
+    } catch (error) {
+      console.error('Conversion error:', error);
+      toast({
+        title: "Conversion failed",
+        description: "Please check your API key and try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsConverting(false);
+    }
   };
+
   const handleDownload = () => {
-    toast({
-      title: "Download started!",
-      description: "Your MP3 file is being downloaded."
-    });
+    if (convertedFile?.link) {
+      window.open(convertedFile.link, '_blank');
+      toast({
+        title: "Download started!",
+        description: "Your MP3 file is being downloaded."
+      });
+    }
   };
-  return <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
@@ -85,23 +149,57 @@ const Index = () => {
           <Card className="mb-8 shadow-2xl border-0 bg-white/70 backdrop-blur-sm">
             <CardContent className="p-8">
               <div className="space-y-6">
+                {/* API Key Input */}
                 <div className="flex flex-col md:flex-row gap-4">
                   <div className="flex-1">
-                    <Input type="url" placeholder="Paste YouTube URL here..." value={url} onChange={e => setUrl(e.target.value)} className="h-14 text-lg border-2 border-gray-200 focus:border-blue-500 rounded-xl" disabled={isConverting} />
+                    <Input
+                      type="password"
+                      placeholder="Enter your RapidAPI key..."
+                      value={apiKey}
+                      onChange={(e) => setApiKey(e.target.value)}
+                      className="h-12 text-lg border-2 border-gray-200 focus:border-purple-500 rounded-xl"
+                      disabled={isConverting}
+                    />
+                    <p className="text-sm text-gray-500 mt-2">
+                      Get your API key from RapidAPI for youtube-mp36 service
+                    </p>
                   </div>
-                  <Button onClick={handleConvert} disabled={isConverting} className="h-14 px-8 text-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg">
-                    {isConverting ? <>
+                </div>
+
+                {/* URL Input and Convert Button */}
+                <div className="flex flex-col md:flex-row gap-4">
+                  <div className="flex-1">
+                    <Input
+                      type="url"
+                      placeholder="Paste YouTube URL here..."
+                      value={url}
+                      onChange={(e) => setUrl(e.target.value)}
+                      className="h-14 text-lg border-2 border-gray-200 focus:border-blue-500 rounded-xl"
+                      disabled={isConverting}
+                    />
+                  </div>
+                  <Button
+                    onClick={handleConvert}
+                    disabled={isConverting}
+                    className="h-14 px-8 text-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg"
+                  >
+                    {isConverting ? (
+                      <>
                         <Clock className="w-5 h-5 mr-2 animate-spin" />
                         Converting...
-                      </> : <>
+                      </>
+                    ) : (
+                      <>
                         <Download className="w-5 h-5 mr-2" />
                         Convert
-                      </>}
+                      </>
+                    )}
                   </Button>
                 </div>
 
                 {/* Conversion Result */}
-                {convertedFile && <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-xl p-6 border border-green-200">
+                {convertedFile && (
+                  <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-xl p-6 border border-green-200">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-4">
                         <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center">
@@ -117,12 +215,16 @@ const Index = () => {
                           </p>
                         </div>
                       </div>
-                      <Button onClick={handleDownload} className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105">
+                      <Button
+                        onClick={handleDownload}
+                        className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105"
+                      >
                         <Download className="w-4 h-4 mr-2" />
                         Download MP3
                       </Button>
                     </div>
-                  </div>}
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -166,10 +268,19 @@ const Index = () => {
               <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">
                 How to Convert YouTube to MP3
               </h3>
-              <div className="grid md:grid-cols-3 gap-6">
+              <div className="grid md:grid-cols-4 gap-6">
+                <div className="text-center">
+                  <div className="w-12 h-12 bg-purple-600 text-white rounded-full flex items-center justify-center mx-auto mb-3 text-xl font-bold">
+                    1
+                  </div>
+                  <h4 className="font-semibold text-gray-900 mb-2">Enter API Key</h4>
+                  <p className="text-gray-600 text-sm">
+                    Get your RapidAPI key for youtube-mp36 service and enter it above.
+                  </p>
+                </div>
                 <div className="text-center">
                   <div className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center mx-auto mb-3 text-xl font-bold">
-                    1
+                    2
                   </div>
                   <h4 className="font-semibold text-gray-900 mb-2">Copy YouTube URL</h4>
                   <p className="text-gray-600 text-sm">
@@ -177,8 +288,8 @@ const Index = () => {
                   </p>
                 </div>
                 <div className="text-center">
-                  <div className="w-12 h-12 bg-purple-600 text-white rounded-full flex items-center justify-center mx-auto mb-3 text-xl font-bold">
-                    2
+                  <div className="w-12 h-12 bg-green-600 text-white rounded-full flex items-center justify-center mx-auto mb-3 text-xl font-bold">
+                    3
                   </div>
                   <h4 className="font-semibold text-gray-900 mb-2">Paste & Convert</h4>
                   <p className="text-gray-600 text-sm">
@@ -186,8 +297,8 @@ const Index = () => {
                   </p>
                 </div>
                 <div className="text-center">
-                  <div className="w-12 h-12 bg-green-600 text-white rounded-full flex items-center justify-center mx-auto mb-3 text-xl font-bold">
-                    3
+                  <div className="w-12 h-12 bg-orange-600 text-white rounded-full flex items-center justify-center mx-auto mb-3 text-xl font-bold">
+                    4
                   </div>
                   <h4 className="font-semibold text-gray-900 mb-2">Download MP3</h4>
                   <p className="text-gray-600 text-sm">
@@ -217,6 +328,8 @@ const Index = () => {
           </div>
         </div>
       </footer>
-    </div>;
+    </div>
+  );
 };
+
 export default Index;
