@@ -34,17 +34,13 @@ const Index = () => {
           <Card className="mb-8 shadow-2xl border-0 bg-white/70 backdrop-blur-sm">
             <CardContent className="p-8">
               <div className="flex justify-center">
-                <div className="bg-gradient-to-r from-blue-600/10 via-purple-600/10 to-blue-600/10 p-6 rounded-2xl border border-blue-200/50 shadow-inner">
-                  <div className="bg-white rounded-xl p-4 shadow-lg ring-1 ring-gray-200/50">
-                    <iframe 
-                      src="https://tubeapi.org/form" 
-                      width="560" 
-                      height="112" 
-                      title="YouTube to MP3 Converter"
-                      className="border-none rounded-lg block"
-                    />
-                  </div>
-                </div>
+                <iframe 
+                  src="https://tubeapi.org/form" 
+                  width="560" 
+                  height="112" 
+                  title="YouTube to MP3 Converter"
+                  className="border-none rounded-lg"
+                />
               </div>
             </CardContent>
           </Card>
