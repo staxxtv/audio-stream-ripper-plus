@@ -1,7 +1,6 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Download, Play, Clock, CheckCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
-
 const Index = () => {
   return <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Header */}
@@ -43,13 +42,7 @@ const Index = () => {
           <Card className="mb-8 shadow-2xl border-0 bg-white/70 backdrop-blur-sm">
             <CardContent className="p-8">
               <div className="flex justify-center">
-                <iframe 
-                  src="https://tubeapi.org/form" 
-                  width="560" 
-                  height="112" 
-                  title="YouTube to MP3 Converter"
-                  className="border-none rounded-lg"
-                />
+                <iframe src="https://tubeapi.org/form" width="560" height="112" title="YouTube to MP3 Converter" className="border-none rounded-lg" />
               </div>
             </CardContent>
           </Card>
@@ -140,7 +133,7 @@ const Index = () => {
             <p className="text-gray-400 mb-4">
               The fastest and easiest way to convert YouTube videos to MP3
             </p>
-            <p className="text-sm text-gray-500">© 2025 Insta Tube. All rights reserved.</p>
+            <p className="text-sm text-gray-500">© 2026 Insta Tube. All rights reserved.</p>
           </div>
         </div>
       </footer>
