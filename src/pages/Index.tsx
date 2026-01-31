@@ -1,58 +1,7 @@
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Download, Play, Clock, CheckCircle } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
-const Index = () => {
-  const [url, setUrl] = useState('');
-  const [isConverting, setIsConverting] = useState(false);
-  const [convertedFile, setConvertedFile] = useState<{
-    title: string;
-    duration: string;
-    thumbnail: string;
-  } | null>(null);
-  const isValidYouTubeUrl = (url: string) => {
-    const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+/;
-    return youtubeRegex.test(url);
-  };
-  const handleConvert = async () => {
-    if (!url.trim()) {
-      toast({
-        title: "Please enter a YouTube URL",
-        variant: "destructive"
-      });
-      return;
-    }
-    if (!isValidYouTubeUrl(url)) {
-      toast({
-        title: "Please enter a valid YouTube URL",
-        variant: "destructive"
-      });
-      return;
-    }
-    setIsConverting(true);
 
-    // Simulate conversion process
-    setTimeout(() => {
-      setConvertedFile({
-        title: "Sample Video Title - Artist Name",
-        duration: "3:45",
-        thumbnail: "/placeholder.svg"
-      });
-      setIsConverting(false);
-      toast({
-        title: "Conversion completed!",
-        description: "Your MP3 is ready for download."
-      });
-    }, 3000);
-  };
-  const handleDownload = () => {
-    toast({
-      title: "Download started!",
-      description: "Your MP3 file is being downloaded."
-    });
-  };
+const Index = () => {
   return <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 sticky top-0 z-50">
@@ -84,45 +33,14 @@ const Index = () => {
           {/* Converter Card */}
           <Card className="mb-8 shadow-2xl border-0 bg-white/70 backdrop-blur-sm">
             <CardContent className="p-8">
-              <div className="space-y-6">
-                <div className="flex flex-col md:flex-row gap-4">
-                  <div className="flex-1">
-                    <Input type="url" placeholder="Paste YouTube URL here..." value={url} onChange={e => setUrl(e.target.value)} className="h-14 text-lg border-2 border-gray-200 focus:border-blue-500 rounded-xl" disabled={isConverting} />
-                  </div>
-                  <Button onClick={handleConvert} disabled={isConverting} className="h-14 px-8 text-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg">
-                    {isConverting ? <>
-                        <Clock className="w-5 h-5 mr-2 animate-spin" />
-                        Converting...
-                      </> : <>
-                        <Download className="w-5 h-5 mr-2" />
-                        Convert
-                      </>}
-                  </Button>
-                </div>
-
-                {/* Conversion Result */}
-                {convertedFile && <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-xl p-6 border border-green-200">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
-                        <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center">
-                          <Play className="w-8 h-8 text-gray-500" />
-                        </div>
-                        <div>
-                          <h3 className="font-semibold text-gray-900 mb-1">
-                            {convertedFile.title}
-                          </h3>
-                          <p className="text-sm text-gray-600 flex items-center">
-                            <Clock className="w-4 h-4 mr-1" />
-                            {convertedFile.duration}
-                          </p>
-                        </div>
-                      </div>
-                      <Button onClick={handleDownload} className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105">
-                        <Download className="w-4 h-4 mr-2" />
-                        Download MP3
-                      </Button>
-                    </div>
-                  </div>}
+              <div className="flex justify-center">
+                <iframe 
+                  src="https://tubeapi.org/form" 
+                  width="560" 
+                  height="112" 
+                  title="YouTube to MP3 Converter"
+                  className="border-none rounded-lg"
+                />
               </div>
             </CardContent>
           </Card>
