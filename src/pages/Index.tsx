@@ -133,7 +133,7 @@ const Index = () => {
             <p className="text-gray-400 mb-4">
               The fastest and easiest way to convert YouTube videos to MP3
             </p>
-            <p className="text-sm text-gray-500">© 2026 Insta Tube. All rights reserved.</p>
+            <p className="text-sm text-gray-500">© 2026 Insta Tube • Staxx Made Productions • All rights reserved.</p>
           </div>
         </div>
       </footer>
