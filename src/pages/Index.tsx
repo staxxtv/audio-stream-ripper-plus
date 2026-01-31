@@ -128,7 +128,11 @@ const Index = () => {
               <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
                 <Play className="w-4 h-4 text-white" />
               </div>
-              <h3 className="text-xl font-bold">Insta-Tube</h3>
+              <h3 className="text-xl font-bold">Insta-Tube
+
+The fastest and easiest way to convert YouTube videos to MP3
+
+© 2026 Insta Tube | Staxx Made Productions LLC | All rights reserved.</h3>
             </div>
             <p className="text-gray-400 mb-4">
               The fastest and easiest way to convert YouTube videos to MP3
