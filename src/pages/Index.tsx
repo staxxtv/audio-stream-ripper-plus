@@ -1,7 +1,6 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Download, Play, Clock, CheckCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import ConvertCounter from '@/components/ConvertCounter';
 const Index = () => {
   return <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Header */}
@@ -40,9 +39,6 @@ const Index = () => {
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
               YouTube to MP3 Converter
             </h2>
-            <div className="mb-6">
-              <ConvertCounter />
-            </div>
             <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
               Convert YouTube videos to high-quality MP3 files instantly. Fast, free, and easy to use.
             </p>
