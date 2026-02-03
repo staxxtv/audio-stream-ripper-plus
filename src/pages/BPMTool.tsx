@@ -1,20 +1,25 @@
 import { useState, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Play, Upload, Music, Loader2, RotateCcw } from 'lucide-react';
+import { Play, Upload, Music, Loader2, RotateCcw, AlertCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { guess } from 'web-audio-beat-detector';
+import { useToast } from '@/hooks/use-toast';
 
 const BPMTool = () => {
   const [file, setFile] = useState<File | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [bpm, setBpm] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
       setFile(selectedFile);
       setBpm(null);
+      setError(null);
     }
   };
 
@@ -24,6 +29,7 @@ const BPMTool = () => {
     if (droppedFile && droppedFile.type.startsWith('audio/')) {
       setFile(droppedFile);
       setBpm(null);
+      setError(null);
     }
   };
 
@@ -36,19 +42,41 @@ const BPMTool = () => {
     
     setIsAnalyzing(true);
     setBpm(null);
+    setError(null);
     
-    // Simulate analysis - replace with actual API call later
-    await new Promise(resolve => setTimeout(resolve, 3000));
-    
-    // Placeholder BPM - replace with actual result from API
-    const fakeBpm = Math.floor(Math.random() * (180 - 60) + 60);
-    setBpm(fakeBpm);
-    setIsAnalyzing(false);
+    try {
+      // Read the file as an ArrayBuffer
+      const arrayBuffer = await file.arrayBuffer();
+      
+      // Create an AudioContext and decode the audio
+      const audioContext = new AudioContext();
+      const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+      
+      // Use web-audio-beat-detector to analyze the tempo
+      const { bpm: detectedBpm } = await guess(audioBuffer);
+      
+      // Round to nearest integer
+      setBpm(Math.round(detectedBpm));
+      
+      // Close the audio context
+      await audioContext.close();
+    } catch (err) {
+      console.error('BPM analysis failed:', err);
+      setError('Could not analyze this audio file. Please try a different file.');
+      toast({
+        title: 'Analysis Failed',
+        description: 'Could not detect BPM. Try a different audio file with a clear beat.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   const resetTool = () => {
     setFile(null);
     setBpm(null);
+    setError(null);
     setIsAnalyzing(false);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
