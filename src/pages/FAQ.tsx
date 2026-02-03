@@ -71,6 +71,9 @@ const FAQ = () => {
               <Link to="/faq" className="text-gray-900 font-medium">
                 FAQ
               </Link>
+              <a href="https://tubeapi.org/" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
+                API
+              </a>
             </nav>
           </div>
         </div>
