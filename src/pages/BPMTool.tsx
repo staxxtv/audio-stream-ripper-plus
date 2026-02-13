@@ -1,16 +1,20 @@
 import { useState, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Play, Upload, Music, Loader2, RotateCcw, AlertCircle } from 'lucide-react';
+import { Play, Upload, Music, Loader2, RotateCcw, Clock, Radio, Layers, FileAudio } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { guess } from 'web-audio-beat-detector';
 import { useToast } from '@/hooks/use-toast';
+import { detectKey, formatDuration, formatSampleRate } from '@/lib/audio-utils';
+import WaveformVisualizer from '@/components/WaveformVisualizer';
 
 const BPMTool = () => {
   const [file, setFile] = useState<File | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [bpm, setBpm] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [audioBuffer, setAudioBuffer] = useState<AudioBuffer | null>(null);
+  const [musicalKey, setMusicalKey] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -43,22 +47,25 @@ const BPMTool = () => {
     setIsAnalyzing(true);
     setBpm(null);
     setError(null);
+    setAudioBuffer(null);
+    setMusicalKey(null);
     
     try {
-      // Read the file as an ArrayBuffer
       const arrayBuffer = await file.arrayBuffer();
-      
-      // Create an AudioContext and decode the audio
       const audioContext = new AudioContext();
-      const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+      const decodedBuffer = await audioContext.decodeAudioData(arrayBuffer);
       
-      // Use web-audio-beat-detector to analyze the tempo
-      const { bpm: detectedBpm } = await guess(audioBuffer);
+      // Store buffer for waveform
+      setAudioBuffer(decodedBuffer);
       
-      // Round to nearest integer
+      // Detect BPM
+      const { bpm: detectedBpm } = await guess(decodedBuffer);
       setBpm(Math.round(detectedBpm));
       
-      // Close the audio context
+      // Detect musical key
+      const key = detectKey(decodedBuffer);
+      setMusicalKey(key);
+      
       await audioContext.close();
     } catch (err) {
       console.error('BPM analysis failed:', err);
@@ -78,6 +85,8 @@ const BPMTool = () => {
     setBpm(null);
     setError(null);
     setIsAnalyzing(false);
+    setAudioBuffer(null);
+    setMusicalKey(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -205,29 +214,73 @@ const BPMTool = () => {
 
               {/* Result State */}
               {bpm !== null && !isAnalyzing && (
-                <div className="text-center py-8">
-                  <div className="w-40 h-40 bg-gradient-to-br from-green-400 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl">
-                    <div className="text-center">
-                      <span className="text-5xl font-bold text-white">{bpm}</span>
-                      <span className="block text-white/80 text-sm font-medium">BPM</span>
+                <div className="py-8">
+                  {/* Top stats row */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                    {/* BPM */}
+                    <div className="bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl p-5 text-center text-white shadow-lg">
+                      <Music className="w-6 h-6 mx-auto mb-2 opacity-80" />
+                      <span className="text-3xl font-bold block">{bpm}</span>
+                      <span className="text-sm opacity-80">BPM</span>
                     </div>
+                    
+                    {/* Duration */}
+                    {audioBuffer && (
+                      <div className="bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl p-5 text-center text-white shadow-lg">
+                        <Clock className="w-6 h-6 mx-auto mb-2 opacity-80" />
+                        <span className="text-3xl font-bold block">{formatDuration(audioBuffer.duration)}</span>
+                        <span className="text-sm opacity-80">Duration</span>
+                      </div>
+                    )}
+                    
+                    {/* Key */}
+                    {musicalKey && (
+                      <div className="bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl p-5 text-center text-white shadow-lg">
+                        <Radio className="w-6 h-6 mx-auto mb-2 opacity-80" />
+                        <span className="text-2xl font-bold block">{musicalKey}</span>
+                        <span className="text-sm opacity-80">Key</span>
+                      </div>
+                    )}
+                    
+                    {/* Sample Rate / Channels */}
+                    {audioBuffer && (
+                      <div className="bg-gradient-to-br from-green-500 to-emerald-500 rounded-2xl p-5 text-center text-white shadow-lg">
+                        <Layers className="w-6 h-6 mx-auto mb-2 opacity-80" />
+                        <span className="text-xl font-bold block">{formatSampleRate(audioBuffer.sampleRate)}</span>
+                        <span className="text-sm opacity-80">{audioBuffer.numberOfChannels === 2 ? 'Stereo' : 'Mono'}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Waveform */}
+                  {audioBuffer && (
+                    <div className="mb-8">
+                      <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Waveform</h4>
+                      <div className="bg-gray-50 rounded-2xl p-4 border border-gray-200/50 h-32">
+                        <WaveformVisualizer audioBuffer={audioBuffer} />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* File info */}
+                  <div className="flex items-center justify-center gap-2 text-sm text-gray-500 mb-6">
+                    <FileAudio className="w-4 h-4" />
+                    <span>{file?.name}</span>
+                    <span>•</span>
+                    <span>{file ? `${(file.size / (1024 * 1024)).toFixed(2)} MB` : ''}</span>
                   </div>
                   
-                  <h3 className="text-2xl font-bold text-gray-900 mb-2">Analysis Complete!</h3>
-                  <p className="text-gray-600 mb-2">
-                    Your track is running at <span className="font-semibold text-purple-600">{bpm} beats per minute</span>
-                  </p>
-                  <p className="text-sm text-gray-500 mb-6">{file?.name}</p>
-                  
-                  <Button
-                    onClick={resetTool}
-                    variant="outline"
-                    size="lg"
-                    className="px-8"
-                  >
-                    <RotateCcw className="w-4 h-4 mr-2" />
-                    Analyze Another File
-                  </Button>
+                  <div className="text-center">
+                    <Button
+                      onClick={resetTool}
+                      variant="outline"
+                      size="lg"
+                      className="px-8"
+                    >
+                      <RotateCcw className="w-4 h-4 mr-2" />
+                      Analyze Another File
+                    </Button>
+                  </div>
                 </div>
               )}
             </CardContent>
