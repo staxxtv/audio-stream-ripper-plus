@@ -1,12 +1,13 @@
 import { useState, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Play, Upload, Music, Loader2, RotateCcw, Clock, Radio, Layers, FileAudio } from 'lucide-react';
+import { Play, Pause, Upload, Music, Loader2, RotateCcw, Clock, Layers, FileAudio } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { guess } from 'web-audio-beat-detector';
 import { useToast } from '@/hooks/use-toast';
-import { detectKey, formatDuration, formatSampleRate } from '@/lib/audio-utils';
+import { formatDuration, formatSampleRate } from '@/lib/audio-utils';
 import WaveformVisualizer from '@/components/WaveformVisualizer';
+import { Slider } from '@/components/ui/slider';
 
 const BPMTool = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -14,8 +15,10 @@ const BPMTool = () => {
   const [bpm, setBpm] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [audioBuffer, setAudioBuffer] = useState<AudioBuffer | null>(null);
-  const [musicalKey, setMusicalKey] = useState<string | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const audioElRef = useRef<HTMLAudioElement | null>(null);
   const { toast } = useToast();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -48,23 +51,29 @@ const BPMTool = () => {
     setBpm(null);
     setError(null);
     setAudioBuffer(null);
-    setMusicalKey(null);
+    setIsPlaying(false);
+    setCurrentTime(0);
+    if (audioElRef.current) {
+      audioElRef.current.pause();
+      audioElRef.current = null;
+    }
     
     try {
       const arrayBuffer = await file.arrayBuffer();
       const audioContext = new AudioContext();
       const decodedBuffer = await audioContext.decodeAudioData(arrayBuffer);
       
-      // Store buffer for waveform
       setAudioBuffer(decodedBuffer);
       
-      // Detect BPM
       const { bpm: detectedBpm } = await guess(decodedBuffer);
       setBpm(Math.round(detectedBpm));
       
-      // Detect musical key
-      const key = detectKey(decodedBuffer);
-      setMusicalKey(key);
+      // Create audio element for playback
+      const audioUrl = URL.createObjectURL(file);
+      const audio = new Audio(audioUrl);
+      audio.addEventListener('timeupdate', () => setCurrentTime(audio.currentTime));
+      audio.addEventListener('ended', () => setIsPlaying(false));
+      audioElRef.current = audio;
       
       await audioContext.close();
     } catch (err) {
@@ -86,7 +95,12 @@ const BPMTool = () => {
     setError(null);
     setIsAnalyzing(false);
     setAudioBuffer(null);
-    setMusicalKey(null);
+    setIsPlaying(false);
+    setCurrentTime(0);
+    if (audioElRef.current) {
+      audioElRef.current.pause();
+      audioElRef.current = null;
+    }
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -233,15 +247,6 @@ const BPMTool = () => {
                       </div>
                     )}
                     
-                    {/* Key */}
-                    {musicalKey && (
-                      <div className="bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl p-5 text-center text-white shadow-lg">
-                        <Radio className="w-6 h-6 mx-auto mb-2 opacity-80" />
-                        <span className="text-2xl font-bold block">{musicalKey}</span>
-                        <span className="text-sm opacity-80">Key</span>
-                      </div>
-                    )}
-                    
                     {/* Sample Rate / Channels */}
                     {audioBuffer && (
                       <div className="bg-gradient-to-br from-green-500 to-emerald-500 rounded-2xl p-5 text-center text-white shadow-lg">
@@ -252,12 +257,47 @@ const BPMTool = () => {
                     )}
                   </div>
 
-                  {/* Waveform */}
+                  {/* Audio Player + Waveform */}
                   {audioBuffer && (
                     <div className="mb-8">
-                      <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Waveform</h4>
-                      <div className="bg-gray-50 rounded-2xl p-4 border border-gray-200/50 h-32">
-                        <WaveformVisualizer audioBuffer={audioBuffer} />
+                      <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Playback</h4>
+                      <div className="bg-gray-50 rounded-2xl p-4 border border-gray-200/50">
+                        <div className="h-32 mb-4">
+                          <WaveformVisualizer audioBuffer={audioBuffer} />
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="shrink-0"
+                            onClick={() => {
+                              if (!audioElRef.current) return;
+                              if (isPlaying) {
+                                audioElRef.current.pause();
+                                setIsPlaying(false);
+                              } else {
+                                audioElRef.current.play();
+                                setIsPlaying(true);
+                              }
+                            }}
+                          >
+                            {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+                          </Button>
+                          <span className="text-sm text-gray-500 w-12 shrink-0">{formatDuration(currentTime)}</span>
+                          <Slider
+                            value={[currentTime]}
+                            max={audioBuffer.duration}
+                            step={0.1}
+                            onValueChange={([v]) => {
+                              if (audioElRef.current) {
+                                audioElRef.current.currentTime = v;
+                                setCurrentTime(v);
+                              }
+                            }}
+                            className="flex-1"
+                          />
+                          <span className="text-sm text-gray-500 w-12 shrink-0">{formatDuration(audioBuffer.duration)}</span>
+                        </div>
                       </div>
                     </div>
                   )}
