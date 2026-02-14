@@ -1,24 +1,7 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Download, Play, Clock, CheckCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useState } from 'react';
-
 const Index = () => {
-  const [url, setUrl] = useState('');
-
-  const handleConvert = () => {
-    if (url.trim()) {
-      window.open(`https://tubeapi.org/?url=${encodeURIComponent(url)}`, '_blank');
-      setUrl('');
-    }
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      handleConvert();
-    }
-  };
-
   return <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 sticky top-0 z-50">
@@ -61,27 +44,14 @@ const Index = () => {
             </p>
           </div>
 
-          {/* Converter Search Bar */}
-          <div className="mb-8 px-4">
-            <div className="max-w-3xl mx-auto">
-              <div className="relative group">
-                <input
-                  type="text"
-                  value={url}
-                  onChange={(e) => setUrl(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  placeholder="Paste YouTube URL here..."
-                  className="w-full h-16 pl-6 pr-40 rounded-full bg-white/60 backdrop-blur-sm text-gray-900 placeholder:text-gray-500 outline-none transition-all duration-300 shadow-lg hover:shadow-xl focus:shadow-2xl focus:bg-white/80 focus:ring-4 focus:ring-blue-500/20"
-                />
-                <button
-                  onClick={handleConvert}
-                  className="absolute right-2 top-2 h-12 px-8 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-full transition-all duration-300 hover:shadow-lg"
-                >
-                  Convert
-                </button>
+          {/* Converter Card */}
+          <Card className="mb-8 shadow-2xl border-0 bg-white/70 backdrop-blur-sm">
+            <CardContent className="p-8">
+              <div className="flex justify-center">
+                <iframe src="https://tubeapi.org/form" width="560" height="112" title="YouTube to MP3 Converter" className="border-none rounded-lg" />
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
 
                     {/* Instructions */}
