@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Play, Pause, Upload, Music, Loader2, RotateCcw, Clock, Layers, FileAudio } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { guess } from 'web-audio-beat-detector';
+import { analyzeFullBuffer } from 'realtime-bpm-analyzer';
 import { useToast } from '@/hooks/use-toast';
 import { formatDuration, formatSampleRate } from '@/lib/audio-utils';
 import WaveformVisualizer from '@/components/WaveformVisualizer';
