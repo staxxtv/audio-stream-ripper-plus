@@ -65,7 +65,13 @@ const BPMTool = () => {
       
       setAudioBuffer(decodedBuffer);
       
-      const { bpm: detectedBpm } = await guess(decodedBuffer);
+      const result = await analyzeFullBuffer(decodedBuffer);
+      let detectedBpm = result[0]?.tempo ?? 0;
+      
+      // Correct half-time / double-time errors
+      while (detectedBpm < 70) detectedBpm *= 2;
+      while (detectedBpm > 200) detectedBpm /= 2;
+      
       setBpm(Math.round(detectedBpm));
       
       // Create audio element for playback
