@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Play, Pause, Upload, Music, Loader2, RotateCcw, Clock, Layers, FileAudio } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { analyzeFullBuffer } from 'realtime-bpm-analyzer';
+import { guess } from 'web-audio-beat-detector';
 import { useToast } from '@/hooks/use-toast';
 import { formatDuration, formatSampleRate } from '@/lib/audio-utils';
 import WaveformVisualizer from '@/components/WaveformVisualizer';
@@ -65,13 +65,7 @@ const BPMTool = () => {
       
       setAudioBuffer(decodedBuffer);
       
-      const result = await analyzeFullBuffer(decodedBuffer);
-      let detectedBpm = result[0]?.tempo ?? 0;
-      
-      // Correct half-time / double-time errors
-      while (detectedBpm < 70) detectedBpm *= 2;
-      while (detectedBpm > 200) detectedBpm /= 2;
-      
+      const { bpm: detectedBpm } = await guess(decodedBuffer);
       setBpm(Math.round(detectedBpm));
       
       // Create audio element for playback
