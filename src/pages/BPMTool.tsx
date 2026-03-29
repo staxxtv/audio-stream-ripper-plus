@@ -1,11 +1,11 @@
 import { useState, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Play, Pause, Upload, Music, Loader2, RotateCcw, Clock, Layers, FileAudio } from 'lucide-react';
+import { Play, Pause, Upload, Music, Loader2, RotateCcw, Clock, Layers, FileAudio, KeyRound } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { guess } from 'web-audio-beat-detector';
 import { useToast } from '@/hooks/use-toast';
-import { formatDuration, formatSampleRate } from '@/lib/audio-utils';
+import { formatDuration, formatSampleRate, detectKey } from '@/lib/audio-utils';
 import WaveformVisualizer from '@/components/WaveformVisualizer';
 import { Slider } from '@/components/ui/slider';
 
@@ -13,6 +13,7 @@ const BPMTool = () => {
   const [file, setFile] = useState<File | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [bpm, setBpm] = useState<number | null>(null);
+  const [musicalKey, setMusicalKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [audioBuffer, setAudioBuffer] = useState<AudioBuffer | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -26,6 +27,7 @@ const BPMTool = () => {
     if (selectedFile) {
       setFile(selectedFile);
       setBpm(null);
+      setMusicalKey(null);
       setError(null);
     }
   };
@@ -36,6 +38,7 @@ const BPMTool = () => {
     if (droppedFile && droppedFile.type.startsWith('audio/')) {
       setFile(droppedFile);
       setBpm(null);
+      setMusicalKey(null);
       setError(null);
     }
   };
@@ -49,6 +52,7 @@ const BPMTool = () => {
     
     setIsAnalyzing(true);
     setBpm(null);
+    setMusicalKey(null);
     setError(null);
     setAudioBuffer(null);
     setIsPlaying(false);
@@ -64,9 +68,13 @@ const BPMTool = () => {
       const decodedBuffer = await audioContext.decodeAudioData(arrayBuffer);
       
       setAudioBuffer(decodedBuffer);
-      
-      const { bpm: detectedBpm } = await guess(decodedBuffer);
+
+      const [{ bpm: detectedBpm }, detectedKey] = await Promise.all([
+        guess(decodedBuffer),
+        Promise.resolve(detectKey(decodedBuffer)),
+      ]);
       setBpm(Math.round(detectedBpm));
+      setMusicalKey(detectedKey);
       
       // Create audio element for playback
       const audioUrl = URL.createObjectURL(file);
@@ -92,6 +100,7 @@ const BPMTool = () => {
   const resetTool = () => {
     setFile(null);
     setBpm(null);
+    setMusicalKey(null);
     setError(null);
     setIsAnalyzing(false);
     setAudioBuffer(null);
@@ -145,10 +154,10 @@ const BPMTool = () => {
               <Music className="w-10 h-10 text-white" />
             </div>
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-              BPM Analyzer
+              BPM & Key Analyzer
             </h2>
             <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-              Upload any audio file and instantly detect its beats per minute. Perfect for DJs, producers, and music enthusiasts.
+              Upload any audio file to detect tempo (BPM) and estimated musical key. Useful for DJs, producers, and anyone matching tracks.
             </p>
           </div>
 
@@ -191,7 +200,7 @@ const BPMTool = () => {
                         className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-12 py-6 text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
                       >
                         <Music className="w-5 h-5 mr-2" />
-                        Analyze BPM
+                        Analyze audio
                       </Button>
                     </div>
                   )}
@@ -221,7 +230,7 @@ const BPMTool = () => {
                   </div>
                   
                   <h3 className="text-2xl font-bold text-gray-900 mb-2">Analyzing Audio...</h3>
-                  <p className="text-gray-600">Detecting beats and calculating tempo</p>
+                  <p className="text-gray-600">Detecting tempo (BPM) and musical key</p>
                   <p className="text-sm text-gray-500 mt-2">{file?.name}</p>
                 </div>
               )}
@@ -237,6 +246,15 @@ const BPMTool = () => {
                       <span className="text-3xl font-bold block">{bpm}</span>
                       <span className="text-sm opacity-80">BPM</span>
                     </div>
+
+                    {/* Musical key */}
+                    {musicalKey !== null && (
+                      <div className="bg-gradient-to-br from-violet-600 to-indigo-600 rounded-2xl p-5 text-center text-white shadow-lg">
+                        <KeyRound className="w-6 h-6 mx-auto mb-2 opacity-80" />
+                        <span className="text-2xl md:text-3xl font-bold block leading-tight">{musicalKey}</span>
+                        <span className="text-sm opacity-80">Key</span>
+                      </div>
+                    )}
                     
                     {/* Duration */}
                     {audioBuffer && (
